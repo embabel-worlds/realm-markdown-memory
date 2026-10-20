@@ -1,0 +1,158 @@
+# One `files` search producer per markdown memory system, plus its concept-expanding twin. Each walks
+# a folder under the world's data/ (relative roots are resolved under the world sandbox; a symlink to
+# the agent's real memory folder is followed when its target is in the world's `filesTrustedRoots`).
+# `emit: search` makes the anchor's text the query: one row per file whose content contains it, with
+# the matching lines as `content`, the term under `matchedFor`, and `score` / `mode` / `probe` on
+# the edge.
+#
+# `compute:` maps the file row onto the Memory contract (types/memory.yml in the default world):
+# `text` is the matching passage, `source` names the system, a file that exists is ACTIVE, the
+# file's own times are `created` / `revised`, and the identity is its path.
+
+# ── Claude Code: one frontmatter file per memory, plus the MEMORY.md index ─────────────────────
+- name: claudeMemorySearch
+  kind: files
+  roots: ["memory/claude"]
+  include: ["**/*.md"]
+  emit: search
+  maxFiles: 500
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'claude'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"
+
+- name: claudeMemorySearchAgentic
+  kind: files
+  roots: ["memory/claude"]
+  include: ["**/*.md"]
+  emit: search
+  agentic: true
+  maxProbes: 5
+  maxFiles: 500
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'claude'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"
+
+# ── OpenClaw: MEMORY.md (durable facts) and memory/YYYY-MM-DD.md (daily logs) ─────────────────
+- name: openclawMemorySearch
+  kind: files
+  roots: ["memory/openclaw"]
+  include: ["MEMORY.md", "memory/**/*.md"]
+  emit: search
+  maxFiles: 1000
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'openclaw'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"
+
+- name: openclawMemorySearchAgentic
+  kind: files
+  roots: ["memory/openclaw"]
+  include: ["MEMORY.md", "memory/**/*.md"]
+  emit: search
+  agentic: true
+  maxProbes: 5
+  maxFiles: 1000
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'openclaw'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"
+
+# ── Cline / Roo / Kilo memory bank ─────────────────────────────────────────────────────────────
+- name: memoryBankSearch
+  kind: files
+  roots: ["memory/memory-bank"]
+  include: ["**/*.md"]
+  emit: search
+  maxFiles: 200
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'memory-bank'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"
+
+- name: memoryBankSearchAgentic
+  kind: files
+  roots: ["memory/memory-bank"]
+  include: ["**/*.md"]
+  emit: search
+  agentic: true
+  maxProbes: 5
+  maxFiles: 200
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'memory-bank'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"
+
+# ── Plain markdown notes (Obsidian, a notes folder, daily notes) ───────────────────────────────
+- name: notesMemorySearch
+  kind: files
+  roots: ["memory/notes"]
+  include: ["**/*.md"]
+  emit: search
+  maxFiles: 2000
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'notes'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"
+
+- name: notesMemorySearchAgentic
+  kind: files
+  roots: ["memory/notes"]
+  include: ["**/*.md"]
+  emit: search
+  agentic: true
+  maxProbes: 5
+  maxFiles: 2000
+  compute:
+    id: "r.path"
+    text: "r.content"
+    file: "r.name"
+    folder: "r.dir"
+    source: "'notes'"
+    status: "'ACTIVE'"
+    confidence: "1.0"
+    created: "r.createdAt"
+    revised: "r.modifiedAt"

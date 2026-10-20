@@ -1,0 +1,137 @@
+# MARKDOWN MEMORY — the file-based memories agents keep, as children of the world's shared `Memory`
+# label (default-world types/memory.yml). Every node carries :Memory and :MarkdownMemory, so:
+#
+#   MATCH (:Concept {value:'coffee'})-[r:RELEVANT_TO]->(m:Memory)          -- every memory system
+#   MATCH (:Concept {value:'coffee'})-[r:RELEVANT_TO]->(m:MarkdownMemory)  -- every file-based one
+#   MATCH (:Concept {value:'coffee'})-[r:RELEVANT_TO]->(m:OpenClawMemory)  -- one of them
+#
+# The files are read LIVE from the world's data/memory/<system>/ folder on every query: nothing is
+# ingested, nothing is indexed, a file edited on disk is what the next query reads. A folder is
+# either the memory itself or a symlink to where the agent keeps it (declare the target under
+# `filesTrustedRoots:` in the world's world.yml so the walk may follow it).
+#
+# Retrieval is LEXICAL: the anchor's text is searched in the files, the matching lines are the
+# memory's `text`, and `r.score` is a neutral 1.0 ("matched"). `via:'agentic-rag'` expands the
+# anchor into probe terms first, so "equity compensation" finds the note that says "option grant".
+# Curation: a file is a current fact by being there; the contract's `status` is ACTIVE.
+- name: MarkdownMemory
+  parents: [Memory]
+  visibility: internal
+  userAnchor: false
+  description: "A memory kept as a markdown file — Claude Code's memory directory, OpenClaw's MEMORY.md and daily logs, a Cline/Roo memory bank, or plain notes — read live from the world's data/memory folder. Name :MarkdownMemory for every file-based memory, :Memory for every memory system, or one child label for one. m.text is the matching passage; m.file the file it came from. Per-match data on the EDGE: r.score (1.0 = matched), r.mode, r.probe."
+  properties:
+    id:
+      description: "The file's path under the world's data folder — the node identity."
+      metadata:
+        identity: "true"
+    file: "The file name the passage came from."
+    folder: "The folder the file sits in, under data/memory."
+    url: "A file:// link to the real file, where it actually lives."
+
+# Claude Code's auto-memory: one markdown file per fact with name / description / type frontmatter,
+# plus MEMORY.md as the index. Folder: data/memory/claude (e.g. a symlink to
+# ~/.claude/projects/<project>/memory).
+- name: ClaudeMemory
+  parents: [MarkdownMemory]
+  visibility: internal
+  userAnchor: false
+  description: "A fact Claude Code remembered for this project: one markdown file per memory in its memory directory, with a name, description and type in frontmatter. Reach it from a free-text Concept via RELEVANT_TO."
+  virtualJoins:
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      keyField: value
+      recordKeyField: matchedFor
+      producer: claudeMemorySearch
+      description: "LEXICAL: Claude Code memory files whose text contains the Concept's words, e.g. (:Concept {value:'omnigraph'})-[:RELEVANT_TO]->(:ClaudeMemory). m.text is the matching passage."
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: agentic-rag
+      keyField: value
+      recordKeyField: matchedFor
+      producer: claudeMemorySearchAgentic
+      description: "CONCEPT search over Claude Code memory files: the Concept is expanded into probe terms first (via:'agentic-rag', optional intent)."
+  properties:
+    id:
+      description: "The file's path — the node identity."
+      metadata:
+        identity: "true"
+
+# OpenClaw: MEMORY.md holds the durable facts, memory/YYYY-MM-DD.md the append-only daily logs.
+# Folder: data/memory/openclaw (e.g. a symlink to ~/.openclaw/workspace).
+- name: OpenClawMemory
+  parents: [MarkdownMemory]
+  visibility: internal
+  userAnchor: false
+  description: "A memory OpenClaw keeps in its workspace: the curated MEMORY.md or a dated daily log under memory/. Reach it from a free-text Concept via RELEVANT_TO; m.file tells a durable fact (MEMORY.md) from a day's log (YYYY-MM-DD.md)."
+  virtualJoins:
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      keyField: value
+      recordKeyField: matchedFor
+      producer: openclawMemorySearch
+      description: "LEXICAL: OpenClaw memory files whose text contains the Concept's words. m.text is the matching passage, m.file the file."
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: agentic-rag
+      keyField: value
+      recordKeyField: matchedFor
+      producer: openclawMemorySearchAgentic
+      description: "CONCEPT search over OpenClaw memory files (via:'agentic-rag')."
+  properties:
+    id:
+      description: "The file's path — the node identity."
+      metadata:
+        identity: "true"
+
+# A Cline / Roo / Kilo "memory bank": projectbrief.md, productContext.md, activeContext.md,
+# systemPatterns.md, techContext.md, progress.md. Folder: data/memory/memory-bank.
+- name: MemoryBankMemory
+  parents: [MarkdownMemory]
+  visibility: internal
+  userAnchor: false
+  description: "A memory-bank file (Cline, Roo, Kilo): projectbrief, productContext, activeContext, systemPatterns, techContext or progress. Reach it from a free-text Concept via RELEVANT_TO."
+  virtualJoins:
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      keyField: value
+      recordKeyField: matchedFor
+      producer: memoryBankSearch
+      description: "LEXICAL: memory-bank files whose text contains the Concept's words."
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: agentic-rag
+      keyField: value
+      recordKeyField: matchedFor
+      producer: memoryBankSearchAgentic
+      description: "CONCEPT search over the memory bank (via:'agentic-rag')."
+  properties:
+    id:
+      description: "The file's path — the node identity."
+      metadata:
+        identity: "true"
+
+# Any markdown notes — an Obsidian vault, a notes folder, daily notes. Folder: data/memory/notes.
+- name: NotesMemory
+  parents: [MarkdownMemory]
+  visibility: internal
+  userAnchor: false
+  description: "A plain markdown note kept as memory — an Obsidian vault or any notes folder. Reach it from a free-text Concept via RELEVANT_TO."
+  virtualJoins:
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      keyField: value
+      recordKeyField: matchedFor
+      producer: notesMemorySearch
+      description: "LEXICAL: notes whose text contains the Concept's words."
+    - anchorLabel: Concept
+      relationship: RELEVANT_TO
+      via: agentic-rag
+      keyField: value
+      recordKeyField: matchedFor
+      producer: notesMemorySearchAgentic
+      description: "CONCEPT search over the notes (via:'agentic-rag')."
+  properties:
+    id:
+      description: "The file's path — the node identity."
+      metadata:
+        identity: "true"
