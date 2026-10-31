@@ -55,3 +55,18 @@ The data contract is `Memory`'s (realm-spec `VIRTUAL_CYPHER.md` §6.8): `id` is 
 and `status` is ACTIVE — a markdown memory is current by being on disk. Instruction files such as
 `CLAUDE.md`, `AGENTS.md` and `SOUL.md` are deliberately not memories; put them nowhere under
 `data/memory`.
+
+## The ladder
+
+The shared label is a migration path, and this realm is one rung of it.
+
+- **Mirror** — install the realm and link the agent's memory folder under `data/memory/`; its files
+  answer under `:Memory` beside the assistant's own from the next query.
+- **Compare** — `memory_bakeoff {topic}` lists what each system recalls, one row per memory with
+  `system` naming it (`claude`, `openclaw`, `memory-bank`, `notes`); `memory_systems` counts per system.
+- **Promote** — `gateway.memory.promote({text, source, id})` copies a fact into the assistant's own
+  memory; the row then reads `status: PROMOTED` and leaves plain `:Memory` reads.
+- **Retire** — uninstall the realm, or unlink one folder; every `:Memory` query keeps answering from
+  the systems that remain.
+
+`source` and `status` are stamped by each producer's `compute:` block, one per system.
