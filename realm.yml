@@ -4,7 +4,7 @@ description: >-
   MEMORY.md and daily logs, a Cline/Roo memory bank, and plain markdown notes — each a child of
   MarkdownMemory, read live from the world's data/memory/ folder, so "what do you remember about X"
   answers from every file-based memory alongside the assistant's own and any memory service.
-version: 0.1.0
+version: 0.1.1
 # The provenance label every node this realm owns carries beside its type: :ClaudeMemory:MarkdownMemory:Memory:Markdown.
 realmLabel: Markdown
 author: Embabel
